@@ -170,14 +170,7 @@ class cut_word(object):
             t.join()
 
         self.insert_today()
-        # self.end_index = len(self.user_game_word_array)
-        # self.threads = []
-        # for i in range(10):
-        #     t = threading.Thread(target=self.insert_today)
-        #     t.start()
-        #     self.threads.append(t)
-        # for t in self.threads:
-        #     t.join()
+
 
         server_cursor.close()
 
