@@ -93,7 +93,8 @@ class cut_word(object):
     def start_cut(self, username, game_name, user_stopwords, user_userdict):
         server_db = self.local_db.get_instance()
         server_cursor = server_db.cursor(cursor=pymysql.cursors.DictCursor)
-
+        
+        # 加载用户词典
         try:
             jieba.load_userdict(user_userdict)
         except IOError:
@@ -105,6 +106,7 @@ class cut_word(object):
                 game_name, yesterday)
         server_cursor.execute(baidu_contents_sql)
         contents = [data["content"] for data in server_cursor.fetchall() if data["content"]]
+        # 开始分词，获取｛分词：次数｝数组
         for i in range(len(contents)):
             content = re.sub('<span.*?>|#|</span>|\d?', "", contents[i])
             cut_sentence = jieba.cut(str(content), cut_all=False, HMM=True)
@@ -114,6 +116,7 @@ class cut_word(object):
                         array[word] = 1
                     else:
                         array[word] = array[word] + 1
+        # 排序，获取top100
         sw = sorted(array.items(), key=lambda x: x[1], reverse=True)[:100]
         self.user_game_word_array[game_name] = {
             "count": len(contents),
@@ -122,15 +125,12 @@ class cut_word(object):
 
         server_cursor.close()
         print("{0}---down".format(game_name))
-
+    
+    # 保存数据
     def insert_today(self):
         server_db = self.local_db.get_instance()
         server_cursor = server_db.cursor(cursor=pymysql.cursors.DictCursor)
         yesterday = str(datetime.date.today() + datetime.timedelta(days=-1))
-        #delete_sql = "delete from cut_today_word;"
-        #server_cursor.execute(delete_sql)
-        #server_db.commit()
-        #print("清表完成{0}".format(delete_sql))
         for game_name in self.user_game_word_array:
             top100_info = self.user_game_word_array[game_name]
             count = top100_info["count"]
